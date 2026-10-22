@@ -286,6 +286,40 @@
       transform: scale(1.1);
     }
 
+    .tool-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .tool-btn {
+      flex: 1;
+      padding: 0.5rem 0.25rem;
+      background-color: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+    }
+
+    .tool-btn.active {
+      background-color: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
     code.inline-code {
       background-color: #334155;
       color: var(--accent-blue);
@@ -477,21 +511,43 @@
 
           <div class="card">
             <div class="card-title"><span>Công Cụ Vẽ</span></div>
+
             <div style="margin-bottom: 0.75rem;">
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Màu
-                sắc nét cọ:</label>
-              <div class="color-picker">
-                <div class="color-btn active" style="background-color: #0f172a;" onclick="setColor('#0f172a', this)">
-                </div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Chế độ công cụ:</label>
+              <div class="tool-selector">
+                <button type="button" id="toolBrush" class="tool-btn active" onclick="setTool('brush')">
+                  <span style="font-size: 1.1rem;">✏️</span>
+                  <span>Bút vẽ</span>
+                </button>
+                <button type="button" id="toolEraser" class="tool-btn" onclick="setTool('eraser')">
+                  <span style="font-size: 1.1rem;">🧹</span>
+                  <span>Cục tẩy</span>
+                </button>
+                <button type="button" id="toolBucket" class="tool-btn" onclick="setTool('bucket')">
+                  <span style="font-size: 1.1rem;">🪣</span>
+                  <span>Đổ màu</span>
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Màu sắc nét / đổ:</label>
+              <div class="color-picker" style="align-items: center;">
+                <div class="color-btn active" style="background-color: #0f172a;" onclick="setColor('#0f172a', this)"></div>
                 <div class="color-btn" style="background-color: #ef4444;" onclick="setColor('#ef4444', this)"></div>
                 <div class="color-btn" style="background-color: #22c55e;" onclick="setColor('#22c55e', this)"></div>
                 <div class="color-btn" style="background-color: #38bdf8;" onclick="setColor('#38bdf8', this)"></div>
+                <div class="color-btn" style="background-color: #f59e0b;" onclick="setColor('#f59e0b', this)"></div>
+                <div class="color-btn" style="background-color: #a855f7;" onclick="setColor('#a855f7', this)"></div>
+                <input type="color" id="customColorPicker" value="#0f172a" title="Chọn màu tùy chỉnh"
+                  style="width: 32px; height: 32px; padding: 0; border: none; border-radius: 50%; cursor: pointer; background: transparent;"
+                  onchange="setColor(this.value, null)">
               </div>
             </div>
+
             <div style="margin-bottom: 1rem;">
-              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Độ
-                dày: <span id="sizeVal">4</span>px</label>
-              <input type="range" id="brushSize" min="1" max="20" value="4"
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Độ dày nét / cỡ tẩy: <span id="sizeVal">4</span>px</label>
+              <input type="range" id="brushSize" min="1" max="40" value="4"
                 style="width: 100%; accent-color: var(--accent-blue);"
                 oninput="document.getElementById('sizeVal').textContent=this.value">
             </div>
@@ -756,6 +812,7 @@
     const ctx = canvas.getContext('2d');
     let painting = false;
     let currentColor = '#0f172a';
+    let currentTool = 'brush'; // 'brush' | 'eraser' | 'bucket'
     let lastX = 0, lastY = 0;
 
     const myId = 'Client_' + Math.floor(Math.random() * 9000 + 1000);
@@ -826,6 +883,9 @@
           if (data.type === 'draw') {
             drawLine(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
             logNet(`[${data.sender}] Vẽ nét x(${Math.round(data.x1)}->${Math.round(data.x2)})`);
+          } else if (data.type === 'fill') {
+            floodFill(Math.round(data.x), Math.round(data.y), data.color);
+            logNet(`[${data.sender}] Đổ màu ${data.color} tại (${Math.round(data.x)}, ${Math.round(data.y)})`);
           } else if (data.type === 'clear') {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             logNet(`[${data.sender}] Xóa sạch bảng`);
@@ -838,6 +898,8 @@
 
     function getCursorPos(e) {
       const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
       let clientX, clientY;
       if (e.touches && e.touches.length > 0) {
         clientX = e.touches[0].clientX;
@@ -847,28 +909,154 @@
         clientY = e.clientY;
       }
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
       };
+    }
+
+    function setTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+      if (tool === 'brush') {
+        document.getElementById('toolBrush').classList.add('active');
+        canvas.style.cursor = 'crosshair';
+      } else if (tool === 'eraser') {
+        document.getElementById('toolEraser').classList.add('active');
+        canvas.style.cursor = 'cell';
+      } else if (tool === 'bucket') {
+        document.getElementById('toolBucket').classList.add('active');
+        canvas.style.cursor = 'crosshair';
+      }
+    }
+
+    // Thuật toán Flood Fill (đổ màu xô nước)
+    function hexToRgba(hex) {
+      let c = hex.replace('#', '');
+      if (c.length === 3) {
+        c = c.split('').map(x => x + x).join('');
+      }
+      const num = parseInt(c, 16);
+      return [
+        (num >> 16) & 255,
+        (num >> 8) & 255,
+        num & 255,
+        255
+      ];
+    }
+
+    function floodFill(startX, startY, fillColorHex) {
+      startX = Math.floor(startX);
+      startY = Math.floor(startY);
+      if (startX < 0 || startX >= canvas.width || startY < 0 || startY >= canvas.height) return;
+
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      const targetIdx = (startY * width + startX) * 4;
+      const targetR = data[targetIdx];
+      const targetG = data[targetIdx + 1];
+      const targetB = data[targetIdx + 2];
+      const targetA = data[targetIdx + 3];
+
+      const fillRgba = hexToRgba(fillColorHex);
+
+      // Nếu màu cần đổ trùng với màu hiện tại thì bỏ qua
+      if (
+        Math.abs(targetR - fillRgba[0]) < 5 &&
+        Math.abs(targetG - fillRgba[1]) < 5 &&
+        Math.abs(targetB - fillRgba[2]) < 5 &&
+        Math.abs(targetA - fillRgba[3]) < 5
+      ) {
+        return;
+      }
+
+      function colorMatch(idx) {
+        return (
+          Math.abs(data[idx] - targetR) <= 30 &&
+          Math.abs(data[idx + 1] - targetG) <= 30 &&
+          Math.abs(data[idx + 2] - targetB) <= 30 &&
+          Math.abs(data[idx + 3] - targetA) <= 30
+        );
+      }
+
+      const queue = [startX, startY];
+      const visited = new Uint8Array(width * height);
+      visited[startY * width + startX] = 1;
+
+      while (queue.length > 0) {
+        const cy = queue.pop();
+        const cx = queue.pop();
+        const idx = (cy * width + cx) * 4;
+
+        data[idx] = fillRgba[0];
+        data[idx + 1] = fillRgba[1];
+        data[idx + 2] = fillRgba[2];
+        data[idx + 3] = fillRgba[3];
+
+        const neighbors = [
+          [cx + 1, cy],
+          [cx - 1, cy],
+          [cx, cy + 1],
+          [cx, cy - 1]
+        ];
+
+        for (let i = 0; i < 4; i++) {
+          const nx = neighbors[i][0];
+          const ny = neighbors[i][1];
+
+          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+            const nPos = ny * width + nx;
+            if (!visited[nPos]) {
+              visited[nPos] = 1;
+              const nIdx = nPos * 4;
+              if (colorMatch(nIdx)) {
+                queue.push(nx, ny);
+              }
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
     }
 
     function startPosition(e) {
       e.preventDefault();
-      painting = true;
       const pos = getCursorPos(e);
+
+      // Nếu đang chọn công cụ đổ màu
+      if (currentTool === 'bucket') {
+        floodFill(pos.x, pos.y, currentColor);
+        if (client.connected) {
+          client.publish(topicName, JSON.stringify({
+            sender: myId,
+            type: 'fill',
+            x: pos.x,
+            y: pos.y,
+            color: currentColor
+          }));
+        }
+        logNet(`Bạn đã đổ màu ${currentColor} tại (${Math.round(pos.x)}, ${Math.round(pos.y)})`);
+        return;
+      }
+
+      painting = true;
       lastX = pos.x;
       lastY = pos.y;
     }
 
     function drawPosition(e) {
-      if (!painting) return;
+      if (!painting || currentTool === 'bucket') return;
       e.preventDefault();
       const pos = getCursorPos(e);
       const currentX = pos.x;
       const currentY = pos.y;
       const size = document.getElementById('brushSize').value;
+      const drawColor = currentTool === 'eraser' ? '#ffffff' : currentColor;
 
-      drawLine(lastX, lastY, currentX, currentY, currentColor, size);
+      drawLine(lastX, lastY, currentX, currentY, drawColor, size);
 
       if (client.connected) {
         const packet = JSON.stringify({
@@ -876,7 +1064,7 @@
           type: 'draw',
           x1: lastX, y1: lastY,
           x2: currentX, y2: currentY,
-          color: currentColor,
+          color: drawColor,
           size: size
         });
         client.publish(topicName, packet);
@@ -913,8 +1101,14 @@
 
     function setColor(color, element) {
       currentColor = color;
-      document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
-      element.classList.add('active');
+      if (element) {
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+      }
+      document.getElementById('customColorPicker').value = color;
+      if (currentTool === 'eraser') {
+        setTool('brush');
+      }
     }
 
     function clearBoard() {
