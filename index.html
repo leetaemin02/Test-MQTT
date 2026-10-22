@@ -456,6 +456,9 @@
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
               Broker: <code class="inline-code">broker.hivemq.com:8884</code>
             </p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+              Phòng nhóm: <code class="inline-code" style="color: var(--accent-green); font-weight: bold;">nhom09</code>
+            </p>
             <p style="font-size: 0.75rem; color: var(--text-muted);">
               Mã nhận diện Client: <strong id="myClientId" style="color: var(--accent-blue);">--</strong>
             </p>
@@ -758,8 +761,10 @@
     const myId = 'Client_' + Math.floor(Math.random() * 9000 + 1000);
     document.getElementById('myClientId').textContent = myId;
 
-    const topicName = "netprog/class/whiteboard/nhom09";
-    const presenceTopic = "netprog/class/whiteboard/presence";
+    // Topic dành riêng cho Nhóm 09 (cả nét vẽ và danh sách trực tuyến)
+    const GROUP_ID = "nhom09";
+    const topicName = `netprog/class/whiteboard/${GROUP_ID}`;
+    const presenceTopic = `netprog/class/whiteboard/${GROUP_ID}/presence`;
 
     const activeClients = new Map();
     activeClients.set(myId, { id: myId, status: 'Đang hoạt động', lastSeen: Date.now() });
