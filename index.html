@@ -122,10 +122,30 @@
       gap: 1.5rem;
     }
 
-    @media (max-width: 1000px) {
+    .grid-lab {
+      display: grid;
+      grid-template-columns: 290px 1fr 290px;
+      gap: 1.25rem;
+      align-items: start;
+    }
 
+    @media (max-width: 1200px) {
+      .grid-lab {
+        grid-template-columns: 280px 1fr;
+      }
+      .grid-lab .right-sidebar {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+      }
+    }
+
+    @media (max-width: 900px) {
       .grid-2,
-      .grid-sidebar {
+      .grid-sidebar,
+      .grid-lab,
+      .grid-lab .right-sidebar {
         grid-template-columns: 1fr;
       }
     }
@@ -204,6 +224,7 @@
     }
 
     .canvas-container {
+      position: relative;
       background-color: #090d16;
       border: 1px solid var(--border-color);
       border-radius: 8px;
@@ -320,6 +341,41 @@
       color: var(--accent-blue);
     }
 
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .shape-btn {
+      padding: 0.45rem 0.2rem;
+      background-color: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all 0.2s;
+    }
+
+    .shape-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+    }
+
+    .shape-btn.active {
+      background-color: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
     code.inline-code {
       background-color: #334155;
       color: var(--accent-blue);
@@ -356,6 +412,16 @@
       font-size: 0.95rem;
       margin-bottom: 0.5rem;
     }
+  
+    .cursor-layer { position:absolute; inset:.5rem; pointer-events:none; overflow:hidden; border-radius:6px; z-index:5; }
+    .remote-cursor { position:absolute; transform:translate(-3px,-3px); pointer-events:none; transition:left .05s linear,top .05s linear; font-size:.72rem; font-weight:700; color:#0f172a; white-space:nowrap; }
+    .remote-cursor::before { content:'➤'; color:#ef4444; font-size:1.1rem; display:inline-block; transform:rotate(-35deg); margin-right:2px; }
+    .remote-cursor span { background:rgba(255,255,255,.92); border:1px solid rgba(15,23,42,.2); border-radius:4px; padding:1px 5px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+    .whiteboard-actions { display:grid; grid-template-columns:1fr 1fr; gap:.45rem; margin-top:.5rem; }
+    .whiteboard-actions .btn { margin-top:0; padding:.5rem .35rem; font-size:.78rem; }
+    .status-input { width:100%; background:#0f172a; border:1px solid var(--border-color); color:var(--text-main); border-radius:6px; padding:.55rem .65rem; outline:none; font-size:.82rem; }
+    .status-input:focus { border-color:var(--accent-blue); }
+
   </style>
 </head>
 
@@ -480,37 +546,14 @@
 
     <!-- TAB 3: PHÒNG LAB WHITEBOARD PHÂN TÁN -->
     <div id="tab3" class="tab-content">
-      <div class="grid-sidebar">
-        <div>
+      <div class="grid-lab">
+        <!-- CỘT TRÁI: TẤT CẢ CÔNG CỤ VẼ & TẠO HÌNH -->
+        <div class="left-sidebar">
           <div class="card">
             <div class="card-title">
-              <span>Trạng Thái Kết Nối MQTT</span>
-              <span id="connStatus" class="badge badge-amber">Đang kết nối...</span>
+              <span>Công Cụ Vẽ</span>
+              <span class="badge badge-blue">Drawing</span>
             </div>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-              Broker: <code class="inline-code">broker.hivemq.com:8884</code>
-            </p>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-              Phòng nhóm: <code class="inline-code" style="color: var(--accent-green); font-weight: bold;">nhom09</code>
-            </p>
-            <p style="font-size: 0.75rem; color: var(--text-muted);">
-              Mã nhận diện Client: <strong id="myClientId" style="color: var(--accent-blue);">--</strong>
-            </p>
-          </div>
-
-          <div class="card">
-            <div class="card-title">
-              <span>Danh Sách Client Trực Tuyến</span>
-              <span id="clientCountBadge" class="badge badge-blue">0 Online</span>
-            </div>
-            <div class="client-list" id="clientListContainer">
-              <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem;">Đang đồng bộ
-                danh sách...</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-title"><span>Công Cụ Vẽ</span></div>
 
             <div style="margin-bottom: 0.75rem;">
               <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Chế độ công cụ:</label>
@@ -526,6 +569,10 @@
                 <button type="button" id="toolBucket" class="tool-btn" onclick="setTool('bucket')">
                   <span style="font-size: 1.1rem;">🪣</span>
                   <span>Đổ màu</span>
+                </button>
+                <button type="button" id="toolText" class="tool-btn" onclick="setTool('text')">
+                  <span style="font-size: 1.1rem;">🔤</span>
+                  <span>Văn bản</span>
                 </button>
               </div>
             </div>
@@ -551,22 +598,129 @@
                 style="width: 100%; accent-color: var(--accent-blue);"
                 oninput="document.getElementById('sizeVal').textContent=this.value">
             </div>
+            <div class="whiteboard-actions">
+              <button class="btn" onclick="undoBoard()">↶ Hoàn tác</button>
+              <button class="btn" onclick="redoBoard()">↷ Làm lại</button>
+              <button class="btn" onclick="saveBoard()">💾 Lưu bảng</button>
+              <button class="btn" onclick="restoreBoard()">📂 Khôi phục</button>
+            </div>
             <button class="btn btn-danger" onclick="clearBoard()">Xóa Sạch Bảng Chung</button>
           </div>
 
           <div class="card">
-            <div class="card-title"><span>Nhật Ký Thao Tác & Mạng</span></div>
-            <div class="log-box" id="netLogs"></div>
+            <div class="card-title">
+              <span>Hình Có Sẵn</span>
+              <span id="activeShapeBadge" class="badge badge-purple" style="display: none;">Đang chọn</span>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.6rem;">
+              Chọn hình rồi kéo thả trên bảng vẽ:
+            </p>
+            <div class="shape-grid">
+              <button type="button" class="shape-btn" id="shapeRect" onclick="selectShape('rect')">
+                <span style="font-size: 1.1rem;">⬜</span>
+                <span>Chữ nhật</span>
+              </button>
+              <button type="button" class="shape-btn" id="shapeCircle" onclick="selectShape('circle')">
+                <span style="font-size: 1.1rem;">⭕</span>
+                <span>Tròn/Elip</span>
+              </button>
+              <button type="button" class="shape-btn" id="shapeDiamond" onclick="selectShape('diamond')">
+                <span style="font-size: 1.1rem;">🔶</span>
+                <span>Hình thoi</span>
+              </button>
+              <button type="button" class="shape-btn" id="shapeTriangle" onclick="selectShape('triangle')">
+                <span style="font-size: 1.1rem;">🔺</span>
+                <span>Tam giác</span>
+              </button>
+              <button type="button" class="shape-btn" id="shapeStar" onclick="selectShape('star')">
+                <span style="font-size: 1.1rem;">⭐</span>
+                <span>Ngôi sao</span>
+              </button>
+              <button type="button" class="shape-btn" id="shapeLine" onclick="selectShape('line')">
+                <span style="font-size: 1.1rem;">📏</span>
+                <span>Đường thẳng</span>
+              </button>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+              <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                <input type="checkbox" id="fillShapeCheckbox" style="accent-color: var(--accent-blue);">
+                <span>Tô đặc hình</span>
+              </label>
+              <button type="button" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 0.75rem;" onclick="cancelShape()">
+                ✕ Bỏ chọn hình
+              </button>
+            </div>
+          </div>
+
+          <!-- KHUNG XUẤT / TẢI ẢNH -->
+          <div class="card">
+            <div class="card-title">
+              <span>Tải Xuống Bảng Vẽ</span>
+              <span class="badge badge-green">Export</span>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Xuất tác phẩm về máy với các định dạng tiêu chuẩn:
+            </p>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn" style="background-color: #d97706; color: #fff; margin-top: 0; padding: 0.5rem 0.4rem; font-size: 0.85rem;" onclick="downloadImage('jpg')">
+                📷 Tải ảnh JPG
+              </button>
+              <button class="btn" style="background-color: #7c3aed; color: #fff; margin-top: 0; padding: 0.5rem 0.4rem; font-size: 0.85rem;" onclick="downloadImage('svg')">
+                📐 Tải file SVG
+              </button>
+            </div>
           </div>
         </div>
 
+        <!-- CỘT GIỮA: BẢNG TRẮNG CHÍNH (CANVAS) -->
         <div class="card" style="display: flex; flex-direction: column;">
           <div class="card-title">
             <span>Bảng Vẽ Phân Tán (Hỗ trợ PC & Điện thoại cuộn trang)</span>
-            <span class="badge badge-green">Optimized Touch</span>
+            <span id="drawingStatus" class="badge badge-green">Sẵn sàng</span>
           </div>
           <div class="canvas-container" style="flex: 1; margin-bottom: 0;">
             <canvas id="whiteboard" class="drawing-canvas" width="1000" height="600" style="height: 560px;"></canvas>
+            <div id="cursorLayer" class="cursor-layer"></div>
+          </div>
+        </div>
+
+        <!-- CỘT PHẢI: TRẠNG THÁI KẾT NỐI, CLIENTS VÀ NHẬT KÝ MẠNG -->
+        <div class="right-sidebar">
+          <div class="card">
+            <div class="card-title">
+              <span>Trạng Thái Kết Nối MQTT</span>
+              <span id="connStatus" class="badge badge-amber">Đang kết nối...</span>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+              Broker: <code class="inline-code">broker.hivemq.com:8884</code>
+            </p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+              Phòng nhóm: <code class="inline-code" style="color: var(--accent-green); font-weight: bold;">nhom09</code>
+            </p>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+              Mã nhận diện Client: <strong id="myClientId" style="color: var(--accent-blue);">--</strong>
+            </p>
+            <label for="displayNameInput" style="display:block; font-size:.75rem; color:var(--text-muted); margin-bottom:.3rem;">Tên hiển thị:</label>
+            <input id="displayNameInput" class="status-input" maxlength="24" placeholder="Nhập tên của bạn">
+            <button class="btn" style="margin-top:.45rem;" onclick="updateDisplayName()">Cập nhật tên</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Danh Sách Client Trực Tuyến</span>
+              <span id="clientCountBadge" class="badge badge-blue">0 Online</span>
+            </div>
+            <div class="client-list" id="clientListContainer">
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem;">Đang đồng bộ danh sách...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Nhật Ký Thao Tác & Mạng</span>
+              <span class="badge badge-blue">MQTT Logs</span>
+            </div>
+            <div class="log-box" id="netLogs" style="height: 220px;"></div>
           </div>
         </div>
       </div>
@@ -812,7 +966,10 @@
     const ctx = canvas.getContext('2d');
     let painting = false;
     let currentColor = '#0f172a';
-    let currentTool = 'brush'; // 'brush' | 'eraser' | 'bucket'
+    let currentTool = 'brush'; // 'brush' | 'eraser' | 'bucket' | 'shape'
+    let currentShape = null;   // 'rect' | 'circle' | 'diamond' | 'triangle' | 'star' | 'line'
+    let shapeStartX = 0, shapeStartY = 0;
+    let shapeSnapshot = null;
     let lastX = 0, lastY = 0;
 
     const myId = 'Client_' + Math.floor(Math.random() * 9000 + 1000);
@@ -883,6 +1040,9 @@
           if (data.type === 'draw') {
             drawLine(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
             logNet(`[${data.sender}] Vẽ nét x(${Math.round(data.x1)}->${Math.round(data.x2)})`);
+          } else if (data.type === 'shape') {
+            drawShape(data.shape, data.x1, data.y1, data.x2, data.y2, data.color, data.size, data.filled);
+            logNet(`[${data.sender}] Vẽ hình ${data.shape} (${Math.round(data.x1)},${Math.round(data.y1)})`);
           } else if (data.type === 'fill') {
             floodFill(Math.round(data.x), Math.round(data.y), data.color);
             logNet(`[${data.sender}] Đổ màu ${data.color} tại (${Math.round(data.x)}, ${Math.round(data.y)})`);
@@ -916,6 +1076,7 @@
 
     function setTool(tool) {
       currentTool = tool;
+      cancelShape(false);
       document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
       if (tool === 'brush') {
         document.getElementById('toolBrush').classList.add('active');
@@ -927,6 +1088,109 @@
         document.getElementById('toolBucket').classList.add('active');
         canvas.style.cursor = 'crosshair';
       }
+    }
+
+    function selectShape(shapeType) {
+      currentShape = shapeType;
+      currentTool = 'shape';
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const targetBtn = document.getElementById('shape' + shapeType.charAt(0).toUpperCase() + shapeType.slice(1));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const badge = document.getElementById('activeShapeBadge');
+      badge.style.display = 'inline-block';
+      badge.textContent = shapeType.toUpperCase();
+      canvas.style.cursor = 'crosshair';
+      logNet(`Đã kích hoạt vẽ hình: ${shapeType}. Kéo chuột trên bảng để vẽ.`);
+    }
+
+    function cancelShape(resetToBrush = true) {
+      currentShape = null;
+      document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('activeShapeBadge').style.display = 'none';
+      if (resetToBrush) {
+        setTool('brush');
+      }
+    }
+
+    // Hàm vẽ các hình cơ bản
+    function drawShape(shape, x1, y1, x2, y2, color, size, filled) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const left = Math.min(x1, x2);
+      const top = Math.min(y1, y2);
+      const width = Math.abs(x2 - x1);
+      const height = Math.abs(y2 - y1);
+
+      ctx.beginPath();
+
+      if (shape === 'rect') {
+        if (filled) {
+          ctx.fillRect(left, top, width, height);
+        } else {
+          ctx.strokeRect(left, top, width, height);
+        }
+      } else if (shape === 'circle') {
+        const radiusX = width / 2;
+        const radiusY = height / 2;
+        const centerX = left + radiusX;
+        const centerY = top + radiusY;
+        ctx.ellipse(centerX, centerY, Math.max(0.1, radiusX), Math.max(0.1, radiusY), 0, 0, Math.PI * 2);
+        if (filled) ctx.fill(); else ctx.stroke();
+      } else if (shape === 'diamond') {
+        const midX = left + width / 2;
+        const midY = top + height / 2;
+        ctx.moveTo(midX, top);
+        ctx.lineTo(left + width, midY);
+        ctx.lineTo(midX, top + height);
+        ctx.lineTo(left, midY);
+        ctx.closePath();
+        if (filled) ctx.fill(); else ctx.stroke();
+      } else if (shape === 'triangle') {
+        const midX = left + width / 2;
+        ctx.moveTo(midX, top);
+        ctx.lineTo(left + width, top + height);
+        ctx.lineTo(left, top + height);
+        ctx.closePath();
+        if (filled) ctx.fill(); else ctx.stroke();
+      } else if (shape === 'star') {
+        const cx = left + width / 2;
+        const cy = top + height / 2;
+        const outerRadius = Math.max(width, height) / 2;
+        const innerRadius = outerRadius / 2.5;
+        const spikes = 5;
+        let rot = (Math.PI / 2) * 3;
+        const step = Math.PI / spikes;
+
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          let x = cx + Math.cos(rot) * outerRadius;
+          let y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        if (filled) ctx.fill(); else ctx.stroke();
+      } else if (shape === 'line') {
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
     }
 
     // Thuật toán Flood Fill (đổ màu xô nước)
@@ -1042,6 +1306,15 @@
         return;
       }
 
+      // Nếu đang chọn chế độ vẽ hình có sẵn
+      if (currentTool === 'shape' && currentShape) {
+        painting = true;
+        shapeStartX = pos.x;
+        shapeStartY = pos.y;
+        shapeSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
       painting = true;
       lastX = pos.x;
       lastY = pos.y;
@@ -1051,9 +1324,20 @@
       if (!painting || currentTool === 'bucket') return;
       e.preventDefault();
       const pos = getCursorPos(e);
+      const size = document.getElementById('brushSize').value;
+
+      // Xử lý kéo thả xem trước (live preview) hình có sẵn
+      if (currentTool === 'shape' && currentShape) {
+        if (shapeSnapshot) {
+          ctx.putImageData(shapeSnapshot, 0, 0);
+        }
+        const isFilled = document.getElementById('fillShapeCheckbox').checked;
+        drawShape(currentShape, shapeStartX, shapeStartY, pos.x, pos.y, currentColor, size, isFilled);
+        return;
+      }
+
       const currentX = pos.x;
       const currentY = pos.y;
-      const size = document.getElementById('brushSize').value;
       const drawColor = currentTool === 'eraser' ? '#ffffff' : currentColor;
 
       drawLine(lastX, lastY, currentX, currentY, drawColor, size);
@@ -1076,6 +1360,54 @@
 
     function endPosition(e) {
       if (!painting) return;
+
+      // Kết thúc vẽ hình có sẵn: vẽ chính thức và gửi gói tin qua MQTT
+      if (currentTool === 'shape' && currentShape) {
+        painting = false;
+        let pos = { x: shapeStartX, y: shapeStartY };
+        if (e.clientX !== undefined || (e.changedTouches && e.changedTouches.length > 0)) {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          let clientX = e.clientX, clientY = e.clientY;
+          if (e.changedTouches && e.changedTouches.length > 0) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+          }
+          if (clientX !== undefined) {
+            pos.x = (clientX - rect.left) * scaleX;
+            pos.y = (clientY - rect.top) * scaleY;
+          }
+        }
+
+        const size = document.getElementById('brushSize').value;
+        const isFilled = document.getElementById('fillShapeCheckbox').checked;
+
+        if (shapeSnapshot) {
+          ctx.putImageData(shapeSnapshot, 0, 0);
+        }
+        drawShape(currentShape, shapeStartX, shapeStartY, pos.x, pos.y, currentColor, size, isFilled);
+
+        if (client.connected) {
+          const shapePacket = JSON.stringify({
+            sender: myId,
+            type: 'shape',
+            shape: currentShape,
+            x1: shapeStartX,
+            y1: shapeStartY,
+            x2: pos.x,
+            y2: pos.y,
+            color: currentColor,
+            size: size,
+            filled: isFilled
+          });
+          client.publish(topicName, shapePacket);
+        }
+        logNet(`Bạn đã vẽ hình [${currentShape}]`);
+        shapeSnapshot = null;
+        return;
+      }
+
       painting = false;
     }
 
@@ -1119,6 +1451,59 @@
       logNet('Bạn đã gửi lệnh xóa toàn bộ bảng vẽ.');
     }
 
+    // Hàm xuất và tải bảng vẽ về máy (JPG, SVG)
+    function downloadImage(format) {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      const filename = `whiteboard_nhom09_${timestamp}`;
+      const link = document.createElement('a');
+
+      if (format === 'jpg') {
+        // Tải dạng JPG: tạo canvas phụ có nền trắng thuần
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.fillStyle = '#ffffff';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(canvas, 0, 0);
+
+        tempCanvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          link.download = `${filename}.jpg`;
+          link.href = url;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          logNet('Đã xuất file ảnh JPG về máy.');
+        }, 'image/jpeg', 0.95);
+      } else if (format === 'svg') {
+        // Tải dạng SVG: render canvas sang jpeg và bọc vector wrapper
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.fillStyle = '#ffffff';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(canvas, 0, 0);
+
+        const imgData = tempCanvas.toDataURL('image/jpeg', 0.95);
+        const svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${canvas.width}" height="${canvas.height}" viewBox="0 0 ${canvas.width} ${canvas.height}">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <image width="${canvas.width}" height="${canvas.height}" xlink:href="${imgData}"/>
+</svg>`;
+        const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        link.download = `${filename}.svg`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        logNet('Đã xuất file SVG về máy.');
+      }
+    }
+
     setInterval(() => {
       const now = Date.now();
       let changed = false;
@@ -1130,6 +1515,258 @@
       });
       if (changed) updateClientListUI();
     }, 4000);
+
+
+    // --- WHITEBOARD ENHANCEMENTS SAFE ---
+    const cursorLayer = document.getElementById('cursorLayer');
+    const undoStack = [], redoStack = [], remoteCursors = new Map(), knownClientNames = new Map();
+    const HISTORY_LIMIT = 25;
+    const SAVED_BOARD_KEY = 'whiteboard_' + GROUP_ID + '_saved';
+    let displayName = (localStorage.getItem('whiteboardDisplayName') || '').trim() || myId;
+    let lastCursorPublish = 0;
+
+    document.getElementById('displayNameInput').value = displayName;
+    knownClientNames.set(myId, displayName);
+    activeClients.set(myId, { id: myId, name: displayName, status: 'Đang hoạt động', drawing: false, lastSeen: Date.now() });
+
+    updateClientListUI = function () {
+      const box = document.getElementById('clientListContainer');
+      box.innerHTML = '';
+      document.getElementById('clientCountBadge').textContent = activeClients.size + ' Online';
+      activeClients.forEach(function (info, id) {
+        const row = document.createElement('div');
+        row.className = 'client-item';
+        const left = document.createElement('span');
+        const strong = document.createElement('b');
+        strong.textContent = info.name || knownClientNames.get(id) || id;
+        left.appendChild(strong);
+        if (id === myId) left.appendChild(document.createTextNode(' (Bạn)'));
+        const small = document.createElement('small');
+        small.style.cssText = 'display:block;color:var(--text-muted);margin-top:2px';
+        small.textContent = id;
+        left.appendChild(small);
+        const badge = document.createElement('span');
+        badge.className = 'badge ' + (info.drawing ? 'badge-amber' : 'badge-green');
+        badge.textContent = info.drawing ? 'Đang vẽ' : 'Online';
+        row.appendChild(left);
+        row.appendChild(badge);
+        box.appendChild(row);
+      });
+    };
+
+    function updateDrawingStatus() {
+      const badge = document.getElementById('drawingStatus');
+      const names = [];
+      activeClients.forEach(function (info, id) {
+        if (id !== myId && info.drawing) names.push(info.name || knownClientNames.get(id) || id);
+      });
+      if (painting) {
+        badge.textContent = 'Bạn đang vẽ...';
+        badge.className = 'badge badge-amber';
+      } else if (names.length) {
+        badge.textContent = names.slice(0, 2).join(', ') + ' đang vẽ...';
+        badge.className = 'badge badge-amber';
+      } else {
+        badge.textContent = 'Sẵn sàng';
+        badge.className = 'badge badge-green';
+      }
+    }
+
+    function publishPresence(isDrawing) {
+      if (isDrawing === undefined) isDrawing = painting;
+      knownClientNames.set(myId, displayName);
+      activeClients.set(myId, { id: myId, name: displayName, status: 'Đang hoạt động', drawing: !!isDrawing, lastSeen: Date.now() });
+      updateClientListUI();
+      updateDrawingStatus();
+      if (client.connected) client.publish(presenceTopic, JSON.stringify({ id: myId, name: displayName, status: 'Active', drawing: !!isDrawing }));
+    }
+
+    function updateDisplayName() {
+      const input = document.getElementById('displayNameInput');
+      displayName = input.value.trim().slice(0, 24) || myId;
+      input.value = displayName;
+      localStorage.setItem('whiteboardDisplayName', displayName);
+      publishPresence(painting);
+      logNet('Tên hiển thị đã đổi thành "' + displayName + '".');
+    }
+
+    function captureSnapshot() { return canvas.toDataURL('image/png'); }
+    function pushUndoSnapshot() {
+      undoStack.push(captureSnapshot());
+      if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+      redoStack.length = 0;
+    }
+    function applySnapshot(dataUrl) {
+      if (!dataUrl) return;
+      const img = new Image();
+      img.onload = function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.onerror = function () { logNet('Không thể đọc dữ liệu snapshot.'); };
+      img.src = dataUrl;
+    }
+    function undoBoard() {
+      if (!undoStack.length) return logNet('Không còn thao tác để hoàn tác.');
+      redoStack.push(captureSnapshot());
+      applySnapshot(undoStack.pop());
+      logNet('Đã hoàn tác thao tác gần nhất.');
+    }
+    function redoBoard() {
+      if (!redoStack.length) return logNet('Không còn thao tác để làm lại.');
+      undoStack.push(captureSnapshot());
+      applySnapshot(redoStack.pop());
+      logNet('Đã làm lại thao tác.');
+    }
+    function saveBoard() {
+      try {
+        localStorage.setItem(SAVED_BOARD_KEY, captureSnapshot());
+        logNet('Đã lưu trạng thái bảng vào trình duyệt.');
+      } catch (e) {
+        console.error(e);
+        logNet('Không thể lưu bảng: dung lượng lưu trữ có thể đã đầy.');
+      }
+    }
+    function restoreBoard() {
+      const saved = localStorage.getItem(SAVED_BOARD_KEY);
+      if (!saved) return logNet('Chưa có bản lưu nào để khôi phục.');
+      pushUndoSnapshot();
+      applySnapshot(saved);
+      logNet('Đã khôi phục bản lưu cục bộ.');
+    }
+
+    function drawTextValue(value, x, y, color, fontSize) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.font = '600 ' + fontSize + 'px Arial, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.fillText(value, x, y);
+      ctx.restore();
+    }
+
+    function showRemoteCursor(data) {
+      if (!data.sender || data.sender === myId) return;
+      let c = remoteCursors.get(data.sender);
+      if (!c) {
+        const el = document.createElement('div');
+        const label = document.createElement('span');
+        el.className = 'remote-cursor';
+        el.appendChild(label);
+        cursorLayer.appendChild(el);
+        c = { el: el, label: label, lastSeen: Date.now() };
+        remoteCursors.set(data.sender, c);
+      }
+      c.label.textContent = data.name || knownClientNames.get(data.sender) || data.sender;
+      c.el.style.left = Math.max(0, Math.min(100, data.x / canvas.width * 100)) + '%';
+      c.el.style.top = Math.max(0, Math.min(100, data.y / canvas.height * 100)) + '%';
+      c.lastSeen = Date.now();
+    }
+
+    const baseSetTool = setTool;
+    setTool = function (tool) {
+      if (tool !== 'text') return baseSetTool(tool);
+      currentTool = 'text';
+      cancelShape(false);
+      document.querySelectorAll('.tool-btn').forEach(function (btn) { btn.classList.remove('active'); });
+      document.getElementById('toolText').classList.add('active');
+      canvas.style.cursor = 'text';
+    };
+
+    canvas.removeEventListener('mousedown', startPosition);
+    canvas.removeEventListener('mousemove', drawPosition);
+    canvas.removeEventListener('mouseup', endPosition);
+    canvas.removeEventListener('mouseleave', endPosition);
+    canvas.removeEventListener('touchstart', startPosition);
+    canvas.removeEventListener('touchmove', drawPosition);
+    canvas.removeEventListener('touchend', endPosition);
+
+    const baseStartPosition = startPosition;
+    const baseDrawPosition = drawPosition;
+    const baseEndPosition = endPosition;
+
+    startPosition = function (e) {
+      e.preventDefault();
+      const pos = getCursorPos(e);
+      if (currentTool === 'text') {
+        const value = window.prompt('Nhập nội dung muốn đặt lên bảng:');
+        if (!value || !value.trim()) return;
+        const textValue = value.trim();
+        const fontSize = Math.max(16, Number(document.getElementById('brushSize').value) * 5);
+        pushUndoSnapshot();
+        drawTextValue(textValue, pos.x, pos.y, currentColor, fontSize);
+        if (client.connected) client.publish(topicName, JSON.stringify({ sender: myId, name: displayName, type: 'text', text: textValue, x: pos.x, y: pos.y, color: currentColor, fontSize: fontSize }));
+        logNet('Bạn đã thêm văn bản "' + textValue + '".');
+        return;
+      }
+      pushUndoSnapshot();
+      baseStartPosition(e);
+      if (painting) publishPresence(true);
+    };
+
+    drawPosition = function (e) {
+      const pos = getCursorPos(e);
+      const now = Date.now();
+      if (client.connected && now - lastCursorPublish >= 50) {
+        lastCursorPublish = now;
+        client.publish(topicName, JSON.stringify({ sender: myId, name: displayName, type: 'cursor', x: pos.x, y: pos.y }));
+      }
+      baseDrawPosition(e);
+    };
+
+    endPosition = function (e) {
+      const wasPainting = painting;
+      baseEndPosition(e);
+      if (wasPainting) publishPresence(false);
+    };
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mousemove', drawPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mouseleave', endPosition);
+    canvas.addEventListener('touchstart', startPosition, { passive: false });
+    canvas.addEventListener('touchmove', drawPosition, { passive: false });
+    canvas.addEventListener('touchend', endPosition);
+
+    clearBoard = function () {
+      if (!window.confirm('Bạn có chắc muốn xóa toàn bộ bảng của tất cả client không?')) return;
+      pushUndoSnapshot();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (client.connected) client.publish(topicName, JSON.stringify({ sender: myId, name: displayName, type: 'clear' }));
+      logNet('Bạn đã gửi lệnh xóa toàn bộ bảng vẽ.');
+    };
+
+    client.on('message', function (topic, payload) {
+      try {
+        const data = JSON.parse(payload.toString());
+        if (topic === presenceTopic && data.id && data.id !== myId) {
+          if (data.name) knownClientNames.set(data.id, data.name);
+          const old = activeClients.get(data.id) || {};
+          activeClients.set(data.id, { id: data.id, name: data.name || knownClientNames.get(data.id) || data.id, status: 'Trực tuyến', drawing: data.drawing === undefined ? !!old.drawing : !!data.drawing, lastSeen: Date.now() });
+          updateClientListUI();
+          updateDrawingStatus();
+          return;
+        }
+        if (topic !== topicName || data.sender === myId) return;
+        if (data.type === 'cursor') showRemoteCursor(data);
+        else if (data.type === 'text') {
+          drawTextValue(data.text, data.x, data.y, data.color, data.fontSize);
+          logNet('[' + (data.name || data.sender) + '] Thêm văn bản');
+        }
+      } catch (e) { console.error(e); }
+    });
+
+    client.on('connect', function () { setTimeout(function () { publishPresence(false); }, 600); });
+    setInterval(function () { publishPresence(painting); }, 3000);
+    setInterval(function () {
+      const now = Date.now();
+      remoteCursors.forEach(function (cursor, id) {
+        if (now - cursor.lastSeen > 5000) {
+          cursor.el.remove();
+          remoteCursors.delete(id);
+        }
+      });
+      updateDrawingStatus();
+    }, 2000);
 
     window.onload = () => {
       startUnicastAnim();
