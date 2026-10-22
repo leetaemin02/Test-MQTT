@@ -600,10 +600,53 @@
     .status-input:focus {
       border-color: var(--accent-blue);
     }
+
+    /* ===== TOAST NOTIFICATION ===== */
+    #gameToast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      border: 1px solid var(--accent-blue);
+      color: var(--text-main);
+      padding: .75rem 1.5rem;
+      border-radius: 10px;
+      font-size: .95rem;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      text-align: center;
+      max-width: 90vw;
+    }
+    #gameToast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #gameToast.toast-success { border-color: var(--accent-green); }
+    #gameToast.toast-error   { border-color: var(--accent-red); }
+    #gameToast.toast-info    { border-color: var(--accent-purple); }
+
+    /* Game role banner */
+    #gameRoleBanner {
+      display: none;
+      padding: .45rem .75rem;
+      border-radius: 6px;
+      font-size: .82rem;
+      font-weight: 700;
+      margin-bottom: .6rem;
+      text-align: center;
+    }
+    #gameRoleBanner.role-drawer  { background:rgba(245,158,11,.2); color:var(--accent-amber); }
+    #gameRoleBanner.role-guesser { background:rgba(56,189,248,.15); color:var(--accent-blue); }
   </style>
 </head>
 
 <body>
+<div id="gameToast"></div>
 
   <header>
     <div class="header-title">🌐 Chương 5 Lab: Multi-Client, Broadcast & MQTT Architecture</div>
@@ -1036,52 +1079,33 @@
           <div class="card">
 
             <div class="card-title">
-              <span>🎮 Draw & Guess</span>
-
-              <span id="gameTimerText" class="badge badge-amber">
-
-                90s
-
-              </span>
+              <span>🎮 Draw &amp; Guess</span>
+              <span id="gameTimerText" class="badge badge-amber">90s</span>
             </div>
 
-            <div style="margin-bottom:10px">
+            <div id="gameRoleBanner"></div>
 
+            <div style="margin-bottom:8px;font-size:.82rem;">
               <b>Người vẽ:</b>
-
-              <span id="drawerName">
-                ---
-              </span>
-
+              <span id="drawerName" style="color:var(--accent-amber)">---</span>
             </div>
 
-            <div style="margin-bottom:10px">
-
+            <div style="margin-bottom:10px;font-size:.82rem;">
               <b>Từ khóa:</b>
-
-              <span id="wordHint">
-                ---
-              </span>
-
+              <span id="wordHint" style="letter-spacing:2px;color:var(--accent-blue);font-weight:700;">---</span>
             </div>
 
-            <button class="btn" onclick="startGuessGame()">
-
+            <button class="btn" id="startGameBtn" onclick="startGuessGame()">
               🎲 Bắt đầu game
-
             </button>
 
-            <input id="guessInput" class="status-input" placeholder="Nhập đáp án..." style="margin-top:10px">
-
-            <button class="btn" onclick="sendGuess()">
-
-              ✅ Đoán
-
-            </button>
-
-            <div id="leaderboardBox" style="margin-top:15px;">
-
+            <div style="display:flex;gap:.4rem;margin-top:.5rem;">
+              <input id="guessInput" class="status-input" placeholder="Nhập đáp án rồi nhấn Enter..."
+                style="flex:1;" onkeydown="if(event.key==='Enter') sendGuess();">
+              <button class="btn" style="width:auto;padding:.55rem .9rem;margin-top:0;" onclick="sendGuess()">✅</button>
             </div>
+
+            <div id="leaderboardBox" style="margin-top:12px;"></div>
 
           </div>
 
@@ -1641,28 +1665,61 @@
     const presenceTopic = `netprog/class/whiteboard/${GROUP_ID}/presence`;
     const gameTopic = `netprog/class/whiteboard/${GROUP_ID}/game`;
     const activeClients = new Map();
-    const GAME_WORDS = [
-      "mèo",
-      "chó",
-      "xe hơi",
-      "máy bay",
-      "ngôi nhà",
-      "cá",
-      "cây xanh",
-      "mặt trời",
-      "hoa",
-      "điện thoại"
+
+    // ── Ngân hàng 30 từ vựng chuẩn ──────────────────────────────────────
+    // Cấu trúc: { display: "Tên hiển thị", answers: ["đáp án hợp lệ 1", ...] }
+    const WORD_BANK = [
+      // Nhóm 1: Đồ vật, động vật và thiên nhiên (20 từ)
+      { display: "Quả chuối",           answers: ["quả chuối", "chuối"] },
+      { display: "Ngôi nhà",            answers: ["ngôi nhà", "nhà"] },
+      { display: "Con mèo",             answers: ["con mèo", "mèo"] },
+      { display: "Mặt trời",            answers: ["mặt trời"] },
+      { display: "Cái ô / Dù",          answers: ["cái ô", "ô", "dù", "cái dù"] },
+      { display: "Xe đạp",              answers: ["xe đạp"] },
+      { display: "Con cá",              answers: ["con cá", "cá"] },
+      { display: "Bông hoa",            answers: ["bông hoa", "hoa"] },
+      { display: "Cây xanh",            answers: ["cây xanh", "cây"] },
+      { display: "Ngọn nến",            answers: ["ngọn nến", "nến"] },
+      { display: "Cái thang",           answers: ["cái thang", "thang"] },
+      { display: "Con chim",            answers: ["con chim", "chim"] },
+      { display: "Cây cầu",             answers: ["cây cầu", "cầu"] },
+      { display: "Quả táo",             answers: ["quả táo", "táo"] },
+      { display: "Cái ghế",             answers: ["cái ghế", "ghế"] },
+      { display: "Con bướm",            answers: ["con bướm", "bướm"] },
+      { display: "Ngôi sao",            answers: ["ngôi sao", "sao"] },
+      { display: "Nhà lều / Lều cắm trại", answers: ["nhà lều", "lều", "lều cắm trại"] },
+      { display: "Con rắn",             answers: ["con rắn", "rắn"] },
+      { display: "Cái kéo",             answers: ["cái kéo", "kéo"] },
+      // Nhóm 2: Khái niệm, công nghệ và trừu tượng (10 từ)
+      { display: "Internet / Wi-Fi",    answers: ["internet", "wifi", "wi-fi", "mạng"] },
+      { display: "Âm nhạc",             answers: ["âm nhạc", "nhạc", "music"] },
+      { display: "Hòa bình",            answers: ["hòa bình", "bình yên"] },
+      { display: "Ô nhiễm",             answers: ["ô nhiễm", "ô nhiễm môi trường"] },
+      { display: "Giấc mơ",             answers: ["giấc mơ", "mơ", "ước mơ"] },
+      { display: "Đồng hồ",             answers: ["đồng hồ", "thời gian"] },
+      { display: "Mưa",                 answers: ["mưa", "trời mưa"] },
+      { display: "Bóng đèn",            answers: ["bóng đèn", "đèn", "đèn điện"] },
+      { display: "Cầu vồng",            answers: ["cầu vồng"] },
+      { display: "Sóng biển",           answers: ["sóng biển", "sóng", "biển"] }
     ];
 
+    // ── Trạng thái game ──────────────────────────────────────────────────
     let gameState = {
       running: false,
       drawer: "",
-      word: "",
+      word: "",        // chỉ người vẽ mới biết
+      displayWord: "", // từ hiển thị (vd: "Cái ô / Dù")
       timeLeft: 90
     };
-
+    let fifoQueue = [];          // hàng đợi FIFO người chơi
+    let usedWordIndices = [];    // tránh lặp từ trong một session
     let scores = {};
     let gameTimer = null;
+    let toastTimer = null;
+
+    // ── Private topic cho người vẽ nhận từ bí mật ────────────────────────
+    const secretTopic = `${gameTopic}/${myId}/secret`;
+
     activeClients.set(myId, { id: myId, status: 'Đang hoạt động', lastSeen: Date.now() });
 
     function logNet(msg) {
@@ -1698,54 +1755,68 @@
       document.getElementById('connStatus').textContent = 'Đã kết nối';
       document.getElementById('connStatus').className = 'badge badge-green';
 
+      // Subscribe cả topic bí mật riêng cho myId
       client.subscribe([
         topicName,
         presenceTopic,
-        gameTopic
+        gameTopic,
+        secretTopic
       ], (err) => {
-        if (!err) logNet(`Đã Subscribe vào các Topic chính.`);
+        if (!err) logNet('Đã Subscribe vào các Topic (kể cả private secret topic).');
       });
 
       setInterval(() => {
-        client.publish(presenceTopic, JSON.stringify({ id: myId, status: 'Active' }));
+        client.publish(presenceTopic, JSON.stringify({ id: myId, name: displayName, status: 'Active', drawing: !!painting }));
       }, 3000);
     });
 
+    // ── DUY NHẤT 1 listener message ──────────────────────────────────────
     client.on('message', (topic, payload) => {
       try {
         const data = JSON.parse(payload.toString());
 
+        // Secret topic: chỉ người vẽ nhận, chứa từ khóa thực
+        if (topic === secretTopic) {
+          gameState.word = data.word;
+          document.getElementById('wordHint').textContent = data.word;
+          logNet('🔐 Bạn là người vẽ — từ bí mật: "' + data.word + '"');
+          return;
+        }
+
         if (topic === gameTopic) {
-
           handleGameMessage(data);
-
           return;
         }
 
         if (topic === presenceTopic) {
           if (data.id && data.id !== myId) {
-            activeClients.set(data.id, { id: data.id, status: 'Trực tuyến', lastSeen: Date.now() });
+            activeClients.set(data.id, { id: data.id, name: data.name || data.id, status: 'Trực tuyến', lastSeen: Date.now() });
             updateClientListUI();
           }
-        } else if (topic === topicName) {
-          if (data.sender === myId) return;
+          return;
+        }
 
+        if (topic === topicName) {
+          if (data.sender === myId) return;
           if (data.type === 'draw') {
             drawLine(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
-            logNet(`[${data.sender}] Vẽ nét x(${Math.round(data.x1)}->${Math.round(data.x2)})`);
+            logNet(`[${data.name || data.sender}] Vẽ nét`);
           } else if (data.type === 'shape') {
             drawShape(data.shape, data.x1, data.y1, data.x2, data.y2, data.color, data.size, data.filled);
-            logNet(`[${data.sender}] Vẽ hình ${data.shape} (${Math.round(data.x1)},${Math.round(data.y1)})`);
+            logNet(`[${data.name || data.sender}] Vẽ hình ${data.shape}`);
           } else if (data.type === 'fill') {
             floodFill(Math.round(data.x), Math.round(data.y), data.color);
-            logNet(`[${data.sender}] Đổ màu ${data.color} tại (${Math.round(data.x)}, ${Math.round(data.y)})`);
+            logNet(`[${data.name || data.sender}] Đổ màu ${data.color}`);
           } else if (data.type === 'template') {
-            if (drawTemplate(data.template)) {
-              logNet(`[${data.sender}] Thêm hình mẫu ${data.template}`);
-            }
+            if (drawTemplate(data.template)) logNet(`[${data.name || data.sender}] Hình mẫu ${data.template}`);
           } else if (data.type === 'clear') {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            logNet(`[${data.sender}] Xóa sạch bảng`);
+            logNet(`[${data.name || data.sender}] Xóa bảng`);
+          } else if (data.type === 'text') {
+            drawTextValue(data.text, data.x, data.y, data.color, data.fontSize);
+            logNet(`[${data.name || data.sender}] Thêm văn bản`);
+          } else if (data.type === 'cursor') {
+            if (typeof showRemoteCursor === 'function') showRemoteCursor(data);
           }
         }
       } catch (e) {
@@ -2480,26 +2551,7 @@
       logNet('Bạn đã gửi lệnh xóa toàn bộ bảng vẽ.');
     };
 
-    client.on('message', function (topic, payload) {
-      try {
-        const data = JSON.parse(payload.toString());
-        if (topic === presenceTopic && data.id && data.id !== myId) {
-          if (data.name) knownClientNames.set(data.id, data.name);
-          const old = activeClients.get(data.id) || {};
-          activeClients.set(data.id, { id: data.id, name: data.name || knownClientNames.get(data.id) || data.id, status: 'Trực tuyến', drawing: data.drawing === undefined ? !!old.drawing : !!data.drawing, lastSeen: Date.now() });
-          updateClientListUI();
-          updateDrawingStatus();
-          return;
-        }
-        if (topic !== topicName || data.sender === myId) return;
-        if (data.type === 'cursor') showRemoteCursor(data);
-        else if (data.type === 'text') {
-          drawTextValue(data.text, data.x, data.y, data.color, data.fontSize);
-          logNet('[' + (data.name || data.sender) + '] Thêm văn bản');
-        }
-      } catch (e) { console.error(e); }
-    });
-
+    // ── Presence & cursor cleanup (phần enhancement, không tạo thêm listener) ──
     client.on('connect', function () { setTimeout(function () { publishPresence(false); }, 600); });
     setInterval(function () { publishPresence(painting); }, 3000);
     setInterval(function () {
@@ -2513,314 +2565,295 @@
       updateDrawingStatus();
     }, 2000);
 
-    function startGuessGame() {
+    // ── Dọn dẹp client không hoạt động ──────────────────────────────────
+    setInterval(function () {
+      const now = Date.now();
+      let changed = false;
+      activeClients.forEach(function (info, id) {
+        if (id !== myId && now - info.lastSeen > 8000) {
+          activeClients.delete(id);
+          changed = true;
+        }
+      });
+      if (changed) updateClientListUI();
+    }, 4000);
 
-      const players =
-        Array.from(
-          activeClients.keys()
-        );
+    // ════════════════════════════════════════════════════════════════════
+    //  GAME FUNCTIONS — Draw & Guess
+    // ════════════════════════════════════════════════════════════════════
 
-      if (players.length < 2) {
+    /** Hiển thị toast không chặn UI */
+    function showToast(msg, type, durationMs) {
+      if (toastTimer) clearTimeout(toastTimer);
+      const el = document.getElementById('gameToast');
+      el.textContent = msg;
+      el.className = 'show toast-' + (type || 'info');
+      toastTimer = setTimeout(function () {
+        el.className = el.className.replace('show', '').trim();
+      }, durationMs || 4000);
+    }
 
-        alert(
-          "Cần ít nhất 2 người chơi"
-        );
+    /** Chuẩn hóa chuỗi: bỏ dấu, thường hoá, cắt khoảng trắng thừa */
+    function normalizeAnswer(str) {
+      return str
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd');
+    }
 
-        return;
+    /** Kiểm tra đáp án đúng (có hỗ trợ từ đồng nghĩa) */
+    function isCorrectAnswer(input, wordEntry) {
+      if (!wordEntry) return false;
+      const normInput = normalizeAnswer(input);
+      return wordEntry.answers.some(function (ans) {
+        return normalizeAnswer(ans) === normInput;
+      });
+    }
+
+    /** Lấy từ ngẫu nhiên chưa dùng trong session */
+    function pickNextWord() {
+      if (usedWordIndices.length >= WORD_BANK.length) usedWordIndices = [];
+      let idx;
+      do { idx = Math.floor(Math.random() * WORD_BANK.length); }
+      while (usedWordIndices.includes(idx));
+      usedWordIndices.push(idx);
+      return { idx: idx, entry: WORD_BANK[idx] };
+    }
+
+    /** Cập nhật banner vai trò */
+    function updateRoleBanner() {
+      const banner = document.getElementById('gameRoleBanner');
+      if (!gameState.running) { banner.style.display = 'none'; return; }
+      banner.style.display = 'block';
+      if (myId === gameState.drawer) {
+        banner.className = 'role-drawer';
+        banner.textContent = '🖌️ Bạn là NGƯỜI VẼ — hãy vẽ từ bí mật!';
+      } else {
+        banner.className = 'role-guesser';
+        banner.textContent = '🔍 Bạn là NGƯỜI ĐOÁN — đừng vẽ!';
       }
-
-      const drawer =
-        players[
-        Math.floor(
-          Math.random()
-          * players.length
-        )
-        ];
-
-      const word =
-        GAME_WORDS[
-        Math.floor(
-          Math.random()
-          * GAME_WORDS.length
-        )
-        ];
-
-      client.publish(
-        gameTopic,
-        JSON.stringify({
-
-          type: "game_start",
-
-          drawer,
-
-          word,
-
-          time: 90
-
-        })
-      );
     }
 
-    function runGameTimer() {
-
-      clearInterval(
-        gameTimer
-      );
-
-      gameTimer =
-        setInterval(() => {
-
-          gameState.timeLeft--;
-
-          document.getElementById(
-            "gameTimerText"
-          ).textContent =
-            gameState.timeLeft + "s";
-
-          if (
-            gameState.timeLeft
-            ===
-            45
-          ) {
-
-            if (
-              myId
-              !==
-              gameState.drawer
-            ) {
-
-              document.getElementById(
-                "wordHint"
-              ).textContent =
-                gameState.word[0]
-                +
-                "...";
-            }
-          }
-
-          if (
-            gameState.timeLeft
-            <=
-            0
-          ) {
-
-            clearInterval(
-              gameTimer
-            );
-
-            client.publish(
-              gameTopic,
-              JSON.stringify({
-
-                type: "time_up"
-
-              })
-            );
-          }
-
-        }, 1000);
-    }
-
-    function sendGuess() {
-
-      const input =
-        document.getElementById(
-          "guessInput"
-        );
-
-      const text =
-        input.value.trim();
-
-      if (!text) return;
-
-      client.publish(
-        gameTopic,
-        JSON.stringify({
-
-          type: "guess",
-
-          sender: myId,
-
-          text: text
-
-        })
-      );
-
-      input.value = "";
-    }
-
-    function addScore(
-      player,
-      score
-    ) {
-
-      if (!scores[player]) {
-
-        scores[player] = 0;
-      }
-
-      scores[player] += score;
-
-      renderLeaderboard();
-    }
-
+    /** Render bảng xếp hạng */
     function renderLeaderboard() {
-
-      const box =
-        document.getElementById(
-          "leaderboardBox"
-        );
-
+      const box = document.getElementById('leaderboardBox');
       if (!box) return;
-
-      let html =
-        "<b>🏆 Bảng xếp hạng</b><br><br>";
-
-      Object.entries(scores)
-
-        .sort(
-          (a, b) =>
-            b[1] - a[1]
-        )
-
-        .forEach(
-          (item, index) => {
-
-            html +=
-              `
-    <div>
-    ${index + 1}.
-    ${item[0]}
-    :
-    ${item[1]} điểm
-    </div>
-    `;
-          }
-        );
-
+      const entries = Object.entries(scores).sort(function (a, b) { return b[1] - a[1]; });
+      if (!entries.length) { box.innerHTML = ''; return; }
+      let html = '<b>🏆 Bảng xếp hạng</b><br><br>';
+      entries.forEach(function (item, index) {
+        html += '<div style="padding:2px 0;font-size:.82rem;">' +
+          (index + 1) + '. ' + (knownClientNames.get(item[0]) || item[0]) +
+          ' : <b>' + item[1] + '</b> điểm</div>';
+      });
       box.innerHTML = html;
     }
 
-    function handleGameMessage(
-      data
-    ) {
+    function addScore(player, score) {
+      if (!scores[player]) scores[player] = 0;
+      scores[player] += score;
+      renderLeaderboard();
+    }
 
+    // ── Bắt đầu game (chỉ người ấn nút mới là host điều phối) ───────────
+    function startGuessGame() {
+      const allIds = Array.from(activeClients.keys());
+      if (allIds.length < 2) {
+        showToast('⚠️ Cần ít nhất 2 người chơi!', 'error', 3000);
+        return;
+      }
+
+      // Xây lại FIFO queue từ danh sách hiện tại (giữ thứ tự join)
+      if (!fifoQueue.length || !fifoQueue.every(function (id) { return activeClients.has(id); })) {
+        fifoQueue = allIds.slice();
+      }
+
+      // Lấy người vẽ đầu hàng đợi rồi đẩy xuống cuối
+      const drawer = fifoQueue.shift();
+      fifoQueue.push(drawer);
+
+      const picked = pickNextWord();
+      const wordEntry = picked.entry;
+
+      // Broadcast game_start KHÔNG chứa từ bí mật
+      client.publish(gameTopic, JSON.stringify({
+        type: 'game_start',
+        drawer: drawer,
+        displayWord: wordEntry.display,
+        wordLen: wordEntry.answers[0].length,
+        time: 90
+      }));
+
+      // Gửi riêng từ bí mật CHỈ cho người vẽ qua private topic
+      const drawerSecretTopic = `${gameTopic}/${drawer}/secret`;
+      client.publish(drawerSecretTopic, JSON.stringify({
+        word: wordEntry.answers[0],
+        display: wordEntry.display,
+        allAnswers: wordEntry.answers
+      }));
+    }
+
+    // ── Timer (chỉ người vẽ mới publish time_up) ─────────────────────────
+    function runGameTimer() {
+      clearInterval(gameTimer);
+      gameTimer = setInterval(function () {
+        gameState.timeLeft--;
+        document.getElementById('gameTimerText').textContent = gameState.timeLeft + 's';
+
+        // Gợi ý chữ cái đầu ở giây thứ 45
+        if (gameState.timeLeft === 45 && myId !== gameState.drawer) {
+          const hint = gameState.displayWord ? gameState.displayWord[0] + '...' : '?...';
+          document.getElementById('wordHint').textContent = hint;
+        }
+
+        // Chỉ người vẽ publish time_up để tránh nhân bản
+        if (gameState.timeLeft <= 0) {
+          clearInterval(gameTimer);
+          if (myId === gameState.drawer) {
+            client.publish(gameTopic, JSON.stringify({ type: 'time_up', answer: gameState.word, display: gameState.displayWord }));
+          }
+        }
+      }, 1000);
+    }
+
+    // ── Gửi đoán ─────────────────────────────────────────────────────────
+    function sendGuess() {
+      const input = document.getElementById('guessInput');
+      const text = (input.value || '').trim();
+      if (!text) return;
+
+      // Người vẽ không được tự đoán
+      if (myId === gameState.drawer) {
+        showToast('🖌️ Bạn là người vẽ, không được đoán!', 'error', 2500);
+        input.value = '';
+        return;
+      }
+
+      // Game chưa chạy
+      if (!gameState.running) {
+        showToast('⏸️ Chưa có vòng game nào đang diễn ra.', 'info', 2000);
+        input.value = '';
+        return;
+      }
+
+      client.publish(gameTopic, JSON.stringify({
+        type: 'guess',
+        sender: myId,
+        name: displayName,
+        text: text
+      }));
+      input.value = '';
+    }
+
+    // ── Xử lý tất cả message game ─────────────────────────────────────────
+    function handleGameMessage(data) {
       switch (data.type) {
 
-        case "game_start":
-
+        case 'game_start': {
           gameState.running = true;
-
-          gameState.drawer =
-            data.drawer;
-
-          gameState.word =
-            data.word;
-
+          gameState.drawer = data.drawer;
+          gameState.word = '';             // sẽ được điền qua secretTopic nếu là người vẽ
+          gameState.displayWord = data.displayWord || '';
           gameState.timeLeft = 90;
 
-          document.getElementById(
-            "drawerName"
-          ).textContent =
-            data.drawer;
+          // Tự động xoá bảng cho vòng mới
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-          if (
-            myId
-            ===
-            data.drawer
-          ) {
+          document.getElementById('drawerName').textContent =
+            knownClientNames.get(data.drawer) || data.drawer;
 
-            document.getElementById(
-              "wordHint"
-            ).textContent =
-              data.word;
-
+          if (myId === data.drawer) {
+            // Người vẽ: từ khóa sẽ đến qua secretTopic (không hiển thị trước)
+            document.getElementById('wordHint').textContent = '(đang nhận từ bí mật...)';
           } else {
-
-            document.getElementById(
-              "wordHint"
-            ).textContent =
-              "_ ".repeat(
-                data.word.length
-              );
+            // Người đoán: hiện gạch dưới theo độ dài từ
+            const blanks = '_ '.repeat(data.wordLen || 4).trim();
+            document.getElementById('wordHint').textContent = blanks;
           }
 
+          updateRoleBanner();
           runGameTimer();
-
-          logNet(
-            "🎮 Bắt đầu vòng chơi"
-          );
-
+          logNet('🎮 Vòng mới bắt đầu! Người vẽ: ' + (knownClientNames.get(data.drawer) || data.drawer));
+          showToast('🎮 Vòng mới bắt đầu!', 'info', 3000);
           break;
+        }
 
-        case "guess":
+        case 'guess': {
+          logNet('💬 ' + (data.name || data.sender) + ': ' + data.text);
 
-          if (
-            data.text
-              .toLowerCase()
-            ===
-            gameState.word
-              .toLowerCase()
-          ) {
-
-            client.publish(
-              gameTopic,
-
-              JSON.stringify({
-
-                type: "correct",
-
-                winner: data.sender
-
-              })
-            );
+          // Chỉ người vẽ kiểm tra đáp án & publish kết quả (tránh N bản)
+          if (myId === gameState.drawer && gameState.running) {
+            // Tìm entry hiện tại
+            const currentEntry = WORD_BANK.find(function (e) {
+              return e.answers[0] === gameState.word ||
+                     e.display === gameState.displayWord;
+            });
+            if (isCorrectAnswer(data.text, currentEntry)) {
+              client.publish(gameTopic, JSON.stringify({
+                type: 'correct',
+                winner: data.sender,
+                winnerName: data.name || data.sender,
+                answer: gameState.word,
+                display: gameState.displayWord
+              }));
+            }
           }
-
           break;
+        }
 
-        case "correct":
+        case 'correct': {
+          if (!gameState.running) break;  // chỉ xử lý 1 lần
+          gameState.running = false;
+          clearInterval(gameTimer);
 
-          clearInterval(
-            gameTimer
-          );
+          addScore(data.winner, 10);
+          if (gameState.drawer) addScore(gameState.drawer, 5);
 
-          addScore(
-            data.winner,
-            10
-          );
-
-          addScore(
-            gameState.drawer,
-            5
-          );
-
-          alert(
-            "🎉 "
-            +
-            data.winner
-            +
-            " đoán đúng!"
-          );
-
+          const winnerLabel = data.winnerName || knownClientNames.get(data.winner) || data.winner;
+          const answerLabel = data.display || data.answer || '';
+          document.getElementById('wordHint').textContent = answerLabel;
+          updateRoleBanner();
+          logNet('🎉 ' + winnerLabel + ' đoán đúng! Đáp án: ' + answerLabel);
+          showToast('🎉 ' + winnerLabel + ' đoán đúng! Đáp án: ' + answerLabel, 'success', 5000);
           break;
+        }
 
-        case "time_up":
+        case 'time_up': {
+          if (!gameState.running) break;
+          gameState.running = false;
+          clearInterval(gameTimer);
 
-          clearInterval(
-            gameTimer
-          );
-
-          alert(
-            "⏰ Hết 90 giây!\nĐáp án: "
-            +
-            gameState.word
-          );
-
+          const revealWord = data.display || data.answer || gameState.displayWord || '???';
+          document.getElementById('wordHint').textContent = revealWord;
+          updateRoleBanner();
+          logNet('⏰ Hết giờ! Đáp án là: ' + revealWord);
+          showToast('⏰ Hết 90 giây! Đáp án: ' + revealWord, 'error', 5000);
           break;
+        }
       }
     }
 
-    window.onload = () => {
+    // ── Phân quyền vẽ trong Game ─────────────────────────────────────────
+    // Bọc startPosition để chặn người đoán vẽ trong lúc game chạy
+    const _origStartPosition = startPosition;
+    startPosition = function (e) {
+      if (gameState.running && myId !== gameState.drawer) {
+        e.preventDefault();
+        showToast('🔍 Bạn là người ĐOÁN — không được vẽ!', 'error', 2000);
+        return;
+      }
+      _origStartPosition.call(this, e);
+    };
+    // Gắn lại listener với hàm wrapper mới
+    canvas.removeEventListener('mousedown', _origStartPosition);
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.removeEventListener('touchstart', _origStartPosition);
+    canvas.addEventListener('touchstart', startPosition, { passive: false });
+
+    window.onload = function () {
       startUnicastAnim();
       startBroadcastAnim();
       startMulticastAnim();
