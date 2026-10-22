@@ -320,6 +320,127 @@
       color: var(--accent-blue);
     }
 
+    .template-gallery {
+      margin-top: 1rem;
+    }
+
+    .template-gallery h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .template-gallery p {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .template-btn {
+      background-color: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .template-btn:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .template-btn svg {
+      display: block;
+      width: 100%;
+      height: 72px;
+      margin-bottom: 0.35rem;
+      background-color: #fff;
+      border-radius: 5px;
+    }
+
+    .template-btn span {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .whiteboard-stage {
+      position: relative;
+      width: 100%;
+      background-color: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .whiteboard-stage canvas.drawing-canvas {
+      position: relative;
+      z-index: 1;
+      background-color: transparent;
+    }
+
+    canvas.guide-canvas {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 560px;
+      pointer-events: none;
+    }
+
+    .guide-panel {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .guide-panel h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .guide-panel p {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .guide-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .guide-btn {
+      padding: 0.45rem 0.7rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .guide-btn:hover,
+    .guide-btn.active {
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      background-color: rgba(56, 189, 248, 0.12);
+    }
+
+    .guide-btn-clear {
+      margin-left: auto;
+      color: #fca5a5;
+    }
+
     code.inline-code {
       background-color: #334155;
       color: var(--accent-blue);
@@ -566,8 +687,127 @@
             <span class="badge badge-green">Optimized Touch</span>
           </div>
           <div class="canvas-container" style="flex: 1; margin-bottom: 0;">
-            <canvas id="whiteboard" class="drawing-canvas" width="1000" height="600" style="height: 560px;"></canvas>
+            <div class="whiteboard-stage">
+              <canvas id="whiteboard" class="drawing-canvas" width="1000" height="600" style="height: 560px;"></canvas>
+              <canvas id="guideCanvas" class="guide-canvas" width="1000" height="600" aria-hidden="true"></canvas>
+            </div>
           </div>
+          <section class="template-gallery" aria-labelledby="templateGalleryTitle">
+            <h3 id="templateGalleryTitle">Hình mẫu tô màu</h3>
+            <p>Chọn một hình để thêm nét viền lên bảng, sau đó dùng công cụ Đổ màu để tô.</p>
+            <div class="template-grid">
+              <button type="button" class="template-btn" onclick="addTemplate('house')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 34 50 9l33 25M24 30v31h52V30M43 61V43h14v18M32 37h9v9h-9zm27 0h9v9h-9z" />
+                    <path d="M78 17h7v13" />
+                  </g>
+                </svg>
+                <span>Ngôi nhà</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('cat')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M29 33 27 14l16 10q7-3 14 0l16-10-2 19q5 7 2 17-5 12-23 12T27 50q-3-10 2-17Z" />
+                    <path d="M39 39h1m20 0h1m-15 7q4 4 8 0m-4-1v4m-7-3-12 2m26-2 12 2" />
+                  </g>
+                </svg>
+                <span>Mèo con</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('fox')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 31 18 10l25 13q7-3 14 0l25-13-3 21q5 22-14 31l-15 6-15-6Q16 53 21 31Z" />
+                    <path d="m23 31 22 12-10 13Q19 49 23 31Zm54 0L55 43l10 13q16-7 12-25Z" />
+                    <path d="M38 34h1m22 0h1m-13 8-6 7h12l-6-7Zm-1 9q1 9 8 0" />
+                  </g>
+                </svg>
+                <span>Cáo con</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('tulip')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M50 9c-4 11-15 10-15 23 0 8 6 13 15 13 9 0 15-5 15-13C65 19 54 20 50 9Z" />
+                    <path d="M50 45v19m0-12c-8-11-19-10-24-7 6 11 14 14 24 12m0-5c8-11 19-10 24-7-6 11-14 14-24 12" />
+                    <path d="M50 45V24m0 21c-7-8-12-11-15-13m15 13c7-8 12-11 15-13" />
+                  </g>
+                </svg>
+                <span>Hoa tulip</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('sun')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="50" cy="35" r="15" />
+                    <path d="M50 5v10m0 40v10M20 35h10m40 0h10M29 14l7 7m28 28 7 7m0-42-7 7m-28 28-7 7" />
+                  </g>
+                </svg>
+                <span>Mặt trời</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('fish')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 35 7 19v32l13-16q27-28 58 0-31 28-58 0Zm0 0q8-16 21 0-13 16-21 0Z" />
+                    <circle cx="67" cy="31" r="2" />
+                    <path d="M42 21q8 14 0 28m13-25q8 11 0 22" />
+                  </g>
+                </svg>
+                <span>Cá nhỏ</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('tree')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M43 62V42h14v20m-7-20V31m0 4L34 22m16 13 16-15" />
+                    <circle cx="50" cy="20" r="13" /><circle cx="36" cy="29" r="11" /><circle cx="64" cy="29" r="11" />
+                  </g>
+                </svg>
+                <span>Cây xanh</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('car')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 43h76V31H76L66 17H35L24 31h-8q-4 0-4 5v7Zm19-12 8-10h22l7 10Z" />
+                    <circle cx="28" cy="44" r="7" /><circle cx="72" cy="44" r="7" />
+                  </g>
+                </svg>
+                <span>Ô tô</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('rainbow')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 60a35 35 0 0 1 70 0M25 60a25 25 0 0 1 50 0M35 60a15 15 0 0 1 30 0M15 60h70" />
+                    <path d="M10 50q-7-5 0-10 3-8 10-4 7 0 6 8m64 6q7-5 0-10-3-8-10-4-7 0-6 8" />
+                  </g>
+                </svg>
+                <span>Cầu vồng</span>
+              </button>
+              <button type="button" class="template-btn" onclick="addTemplate('butterfly')">
+                <svg viewBox="0 0 100 70" aria-hidden="true">
+                  <g fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M48 31C32 5 15 14 23 32c-15 15 1 28 25 11m4-12c16-26 33-17 25 1 15 15-1 28-25 11m-2-12v14m0-19q-8-15-14-14m16 14q8-15 14-14" />
+                    <circle cx="34" cy="29" r="3" /><circle cx="66" cy="29" r="3" />
+                  </g>
+                </svg>
+                <span>Bướm</span>
+              </button>
+            </div>
+          </section>
+          <section class="guide-panel" aria-labelledby="guidePanelTitle">
+            <h3 id="guidePanelTitle">Gợi ý nét vẽ</h3>
+            <p>Chọn hình để hiện nét đứt trên bảng, rồi dùng bút vẽ đồ theo. Nét gợi ý chỉ hiển thị trên máy của bạn và không ảnh hưởng đến tô màu.</p>
+            <div class="guide-options">
+              <button type="button" class="guide-btn" onclick="showGuide('house', this)">Ngôi nhà</button>
+              <button type="button" class="guide-btn" onclick="showGuide('cat', this)">Mèo con</button>
+              <button type="button" class="guide-btn" onclick="showGuide('fox', this)">Cáo con</button>
+              <button type="button" class="guide-btn" onclick="showGuide('tulip', this)">Hoa tulip</button>
+              <button type="button" class="guide-btn" onclick="showGuide('sun', this)">Mặt trời</button>
+              <button type="button" class="guide-btn" onclick="showGuide('fish', this)">Cá nhỏ</button>
+              <button type="button" class="guide-btn" onclick="showGuide('tree', this)">Cây xanh</button>
+              <button type="button" class="guide-btn" onclick="showGuide('car', this)">Ô tô</button>
+              <button type="button" class="guide-btn" onclick="showGuide('rainbow', this)">Cầu vồng</button>
+              <button type="button" class="guide-btn" onclick="showGuide('butterfly', this)">Bướm</button>
+              <button type="button" class="guide-btn guide-btn-clear" onclick="clearGuide()">Ẩn gợi ý</button>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -810,10 +1050,299 @@
     // --- TAB 3: WHITEBOARD & TOUCH FIX ---
     const canvas = document.getElementById('whiteboard');
     const ctx = canvas.getContext('2d');
+    const guideCanvas = document.getElementById('guideCanvas');
+    const guideCtx = guideCanvas.getContext('2d');
     let painting = false;
     let currentColor = '#0f172a';
     let currentTool = 'brush'; // 'brush' | 'eraser' | 'bucket'
     let lastX = 0, lastY = 0;
+
+    const templateDrawers = {
+      cat(context) {
+        context.beginPath();
+        context.moveTo(365, 260);
+        context.lineTo(350, 120);
+        context.lineTo(455, 195);
+        context.quadraticCurveTo(500, 175, 545, 195);
+        context.lineTo(650, 120);
+        context.lineTo(635, 260);
+        context.quadraticCurveTo(700, 365, 620, 440);
+        context.quadraticCurveTo(500, 520, 380, 440);
+        context.quadraticCurveTo(300, 365, 365, 260);
+        context.stroke();
+        context.beginPath();
+        context.arc(425, 315, 8, 0, Math.PI * 2);
+        context.arc(575, 315, 8, 0, Math.PI * 2);
+        context.moveTo(480, 355);
+        context.lineTo(500, 370);
+        context.lineTo(520, 355);
+        context.moveTo(500, 370);
+        context.lineTo(500, 395);
+        context.moveTo(500, 395);
+        context.quadraticCurveTo(480, 420, 460, 395);
+        context.moveTo(500, 395);
+        context.quadraticCurveTo(520, 420, 540, 395);
+        context.moveTo(450, 375);
+        context.lineTo(340, 355);
+        context.moveTo(450, 395);
+        context.lineTo(335, 410);
+        context.moveTo(550, 375);
+        context.lineTo(660, 355);
+        context.moveTo(550, 395);
+        context.lineTo(665, 410);
+        context.stroke();
+      },
+      fox(context) {
+        context.beginPath();
+        context.moveTo(330, 230);
+        context.lineTo(310, 100);
+        context.lineTo(445, 175);
+        context.quadraticCurveTo(500, 150, 555, 175);
+        context.lineTo(690, 100);
+        context.lineTo(670, 230);
+        context.quadraticCurveTo(715, 375, 610, 465);
+        context.lineTo(500, 520);
+        context.lineTo(390, 465);
+        context.quadraticCurveTo(285, 375, 330, 230);
+        context.closePath();
+        context.stroke();
+        context.beginPath();
+        context.moveTo(340, 235);
+        context.lineTo(440, 290);
+        context.lineTo(390, 400);
+        context.quadraticCurveTo(320, 340, 340, 235);
+        context.closePath();
+        context.moveTo(660, 235);
+        context.lineTo(560, 290);
+        context.lineTo(610, 400);
+        context.quadraticCurveTo(680, 340, 660, 235);
+        context.closePath();
+        context.moveTo(420, 335);
+        context.quadraticCurveTo(500, 300, 580, 335);
+        context.lineTo(500, 450);
+        context.closePath();
+        context.moveTo(410, 295);
+        context.lineTo(455, 305);
+        context.moveTo(545, 305);
+        context.lineTo(590, 295);
+        context.moveTo(480, 350);
+        context.lineTo(500, 365);
+        context.lineTo(520, 350);
+        context.moveTo(500, 365);
+        context.lineTo(500, 390);
+        context.moveTo(500, 390);
+        context.quadraticCurveTo(480, 415, 460, 390);
+        context.moveTo(500, 390);
+        context.quadraticCurveTo(520, 415, 540, 390);
+        context.stroke();
+      },
+      tulip(context) {
+        context.beginPath();
+        context.moveTo(500, 305);
+        context.bezierCurveTo(455, 250, 390, 235, 390, 175);
+        context.bezierCurveTo(390, 125, 455, 125, 500, 175);
+        context.bezierCurveTo(545, 125, 610, 125, 610, 175);
+        context.bezierCurveTo(610, 235, 545, 250, 500, 305);
+        context.closePath();
+        context.moveTo(500, 305);
+        context.lineTo(500, 520);
+        context.moveTo(500, 405);
+        context.bezierCurveTo(440, 330, 365, 350, 350, 390);
+        context.bezierCurveTo(385, 450, 445, 455, 500, 435);
+        context.closePath();
+        context.moveTo(500, 465);
+        context.bezierCurveTo(560, 390, 635, 410, 650, 450);
+        context.bezierCurveTo(615, 510, 555, 515, 500, 495);
+        context.closePath();
+        context.moveTo(500, 305);
+        context.quadraticCurveTo(450, 235, 430, 170);
+        context.moveTo(500, 305);
+        context.quadraticCurveTo(550, 235, 570, 170);
+        context.stroke();
+      },
+      house(context) {
+        context.beginPath();
+        context.moveTo(250, 285);
+        context.lineTo(500, 100);
+        context.lineTo(750, 285);
+        context.moveTo(300, 250);
+        context.lineTo(300, 500);
+        context.lineTo(700, 500);
+        context.lineTo(700, 250);
+        context.moveTo(450, 500);
+        context.lineTo(450, 365);
+        context.lineTo(550, 365);
+        context.lineTo(550, 500);
+        context.moveTo(350, 310);
+        context.lineTo(420, 310);
+        context.lineTo(420, 380);
+        context.lineTo(350, 380);
+        context.closePath();
+        context.moveTo(580, 310);
+        context.lineTo(650, 310);
+        context.lineTo(650, 380);
+        context.lineTo(580, 380);
+        context.closePath();
+        context.moveTo(680, 180);
+        context.lineTo(680, 110);
+        context.lineTo(730, 110);
+        context.lineTo(730, 220);
+        context.stroke();
+      },
+      sun(context) {
+        context.beginPath();
+        context.arc(500, 300, 95, 0, Math.PI * 2);
+        context.moveTo(500, 145);
+        context.lineTo(500, 100);
+        context.moveTo(500, 455);
+        context.lineTo(500, 500);
+        context.moveTo(345, 300);
+        context.lineTo(300, 300);
+        context.moveTo(655, 300);
+        context.lineTo(700, 300);
+        context.moveTo(390, 190);
+        context.lineTo(358, 158);
+        context.moveTo(610, 410);
+        context.lineTo(642, 442);
+        context.moveTo(610, 190);
+        context.lineTo(642, 158);
+        context.moveTo(390, 410);
+        context.lineTo(358, 442);
+        context.stroke();
+        context.beginPath();
+        context.arc(465, 285, 8, 0, Math.PI * 2);
+        context.arc(535, 285, 8, 0, Math.PI * 2);
+        context.moveTo(460, 330);
+        context.quadraticCurveTo(500, 370, 540, 330);
+        context.stroke();
+      },
+      fish(context) {
+        context.beginPath();
+        context.ellipse(500, 300, 175, 105, 0, 0, Math.PI * 2);
+        context.moveTo(330, 300);
+        context.lineTo(225, 205);
+        context.lineTo(225, 395);
+        context.closePath();
+        context.moveTo(475, 200);
+        context.quadraticCurveTo(525, 130, 575, 205);
+        context.moveTo(475, 400);
+        context.quadraticCurveTo(525, 470, 575, 395);
+        context.stroke();
+        context.beginPath();
+        context.arc(590, 270, 10, 0, Math.PI * 2);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(500, 205);
+        context.quadraticCurveTo(450, 300, 500, 395);
+        context.moveTo(550, 220);
+        context.quadraticCurveTo(495, 300, 550, 380);
+        context.moveTo(650, 315);
+        context.quadraticCurveTo(680, 335, 650, 350);
+        context.stroke();
+      },
+      tree(context) {
+        context.beginPath();
+        context.moveTo(445, 500);
+        context.lineTo(445, 370);
+        context.lineTo(555, 370);
+        context.lineTo(555, 500);
+        context.closePath();
+        context.moveTo(615, 230);
+        context.arc(500, 230, 115, 0, Math.PI * 2);
+        context.moveTo(475, 285);
+        context.arc(390, 285, 85, 0, Math.PI * 2);
+        context.moveTo(695, 285);
+        context.arc(610, 285, 85, 0, Math.PI * 2);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(500, 370);
+        context.lineTo(500, 290);
+        context.moveTo(500, 330);
+        context.lineTo(435, 270);
+        context.moveTo(500, 330);
+        context.lineTo(565, 270);
+        context.stroke();
+      },
+      car(context) {
+        context.beginPath();
+        context.moveTo(250, 390);
+        context.lineTo(250, 340);
+        context.quadraticCurveTo(250, 315, 280, 310);
+        context.lineTo(350, 300);
+        context.lineTo(415, 215);
+        context.quadraticCurveTo(430, 195, 460, 195);
+        context.lineTo(585, 195);
+        context.quadraticCurveTo(615, 195, 635, 220);
+        context.lineTo(700, 310);
+        context.lineTo(740, 320);
+        context.quadraticCurveTo(765, 330, 765, 355);
+        context.lineTo(765, 390);
+        context.closePath();
+        context.moveTo(375, 300);
+        context.lineTo(430, 230);
+        context.lineTo(500, 230);
+        context.lineTo(500, 300);
+        context.closePath();
+        context.moveTo(520, 230);
+        context.lineTo(585, 230);
+        context.lineTo(635, 300);
+        context.lineTo(520, 300);
+        context.closePath();
+        context.stroke();
+        context.beginPath();
+        context.arc(355, 390, 48, 0, Math.PI * 2);
+        context.arc(660, 390, 48, 0, Math.PI * 2);
+        context.stroke();
+      },
+      rainbow(context) {
+        context.beginPath();
+        context.moveTo(250, 430);
+        context.arc(500, 430, 250, Math.PI, Math.PI * 2);
+        context.moveTo(295, 430);
+        context.arc(500, 430, 205, Math.PI, Math.PI * 2);
+        context.moveTo(340, 430);
+        context.arc(500, 430, 160, Math.PI, Math.PI * 2);
+        context.moveTo(385, 430);
+        context.arc(500, 430, 115, Math.PI, Math.PI * 2);
+        context.moveTo(250, 430);
+        context.lineTo(385, 430);
+        context.moveTo(615, 430);
+        context.lineTo(750, 430);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(216, 400);
+        context.arc(250, 420, 45, Math.PI * 0.85, Math.PI * 1.95);
+        context.moveTo(240, 400);
+        context.arc(295, 400, 55, Math.PI * 1.05, Math.PI * 2);
+        context.moveTo(716, 400);
+        context.arc(750, 420, 45, Math.PI * 1.05, Math.PI * 2.15);
+        context.moveTo(760, 400);
+        context.arc(705, 400, 55, Math.PI, Math.PI * 1.95);
+        context.stroke();
+      },
+      butterfly(context) {
+        context.beginPath();
+        context.moveTo(490, 290);
+        context.bezierCurveTo(390, 60, 210, 120, 300, 285);
+        context.bezierCurveTo(180, 390, 315, 520, 490, 390);
+        context.moveTo(510, 290);
+        context.bezierCurveTo(610, 60, 790, 120, 700, 285);
+        context.bezierCurveTo(820, 390, 685, 520, 510, 390);
+        context.moveTo(500, 275);
+        context.lineTo(500, 405);
+        context.moveTo(490, 290);
+        context.quadraticCurveTo(420, 175, 380, 165);
+        context.moveTo(510, 290);
+        context.quadraticCurveTo(580, 175, 620, 165);
+        context.stroke();
+        context.beginPath();
+        context.arc(345, 270, 22, 0, Math.PI * 2);
+        context.arc(655, 270, 22, 0, Math.PI * 2);
+        context.arc(370, 390, 17, 0, Math.PI * 2);
+        context.arc(630, 390, 17, 0, Math.PI * 2);
+        context.stroke();
+      }
+    };
 
     const myId = 'Client_' + Math.floor(Math.random() * 9000 + 1000);
     document.getElementById('myClientId').textContent = myId;
@@ -886,6 +1415,10 @@
           } else if (data.type === 'fill') {
             floodFill(Math.round(data.x), Math.round(data.y), data.color);
             logNet(`[${data.sender}] Đổ màu ${data.color} tại (${Math.round(data.x)}, ${Math.round(data.y)})`);
+          } else if (data.type === 'template') {
+            if (drawTemplate(data.template)) {
+              logNet(`[${data.sender}] Thêm hình mẫu ${data.template}`);
+            }
           } else if (data.type === 'clear') {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             logNet(`[${data.sender}] Xóa sạch bảng`);
@@ -1097,6 +1630,54 @@
       ctx.lineCap = 'round';
       ctx.stroke();
       ctx.closePath();
+    }
+
+    function drawTemplate(templateId) {
+      if (!Object.prototype.hasOwnProperty.call(templateDrawers, templateId)) return false;
+      const draw = templateDrawers[templateId];
+
+      ctx.save();
+      ctx.strokeStyle = '#1f2937';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      draw(ctx);
+      ctx.restore();
+      return true;
+    }
+
+    function showGuide(templateId, button) {
+      if (!Object.prototype.hasOwnProperty.call(templateDrawers, templateId)) return;
+
+      guideCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
+      guideCtx.save();
+      guideCtx.strokeStyle = 'rgba(14, 116, 144, 0.55)';
+      guideCtx.lineWidth = 4;
+      guideCtx.lineCap = 'round';
+      guideCtx.lineJoin = 'round';
+      guideCtx.setLineDash([12, 10]);
+      templateDrawers[templateId](guideCtx);
+      guideCtx.restore();
+
+      document.querySelectorAll('.guide-btn').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+    }
+
+    function clearGuide() {
+      guideCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
+      document.querySelectorAll('.guide-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    function addTemplate(templateId) {
+      if (!drawTemplate(templateId)) return;
+      if (client.connected) {
+        client.publish(topicName, JSON.stringify({
+          sender: myId,
+          type: 'template',
+          template: templateId
+        }));
+      }
+      logNet(`Bạn đã thêm hình mẫu ${templateId} lên bảng.`);
     }
 
     function setColor(color, element) {
